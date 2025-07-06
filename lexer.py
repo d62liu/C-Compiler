@@ -1,6 +1,11 @@
 
 import enum
 
+class Token:
+    def __init__(self, val, type):
+        self.val = val
+        self.type = type
+ 
 class lexer:
     def __init__(self, source):
         self.source = source + "\n"
@@ -29,14 +34,28 @@ class lexer:
         self.cur_char = self.source[self.cur_pos]
     def getToken(self): #Will do most of the work, call other methods
         pass
-    
-class token:
-    def __init__(self, val, type):
-        self.val = val
-        self.type = type
+    def get_token(self):
+        token = None
+        if self.cur_char == "*":
+            token = Token()
+            
+        elif self.cur_char == "-":
+            pass
+        elif self.curChar == '*':
+                pass	
+        elif self.curChar == '/':
+            pass	
+        elif self.curChar == '\n':
+            pass	# Newline token.
+        elif self.curChar == '\0':
+            pass	# EOF token.
+        else:
+            # Unknown token!
+            pass
+        self.nextChar()
+        
 
     
-        
 class TokenType(enum.Enum):
 	EOF = -1
 	NEWLINE = 0
