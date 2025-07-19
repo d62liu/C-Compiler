@@ -1,5 +1,6 @@
 
 import enum
+import sys
 
 class Token:
     def __init__(self, val, type):
@@ -32,27 +33,50 @@ class lexer:
         while self.source[self.cur_pos] != "\n":
             self.next_char()
         self.cur_char = self.source[self.cur_pos]
-    def getToken(self): #Will do most of the work, call other methods
-        pass
     def get_token(self):
+        self.skip_whitespace()
+        self.skip_comments()
         token = None
         if self.cur_char == "*":
-            token = Token()
-            
+            token = Token("*", TokenType.ASTERISK)
         elif self.cur_char == "-":
-            pass
-        elif self.curChar == '*':
-                pass	
+            token = Token("-", TokenType.MINUS)
+        elif self.curChar == '+':
+            token = Token("+", TokenType.PLUS)
         elif self.curChar == '/':
-            pass	
+            token = Token("/", TokenType.SLASH)
         elif self.curChar == '\n':
-            pass	# Newline token.
+            token = Token("nl", TokenType.NEWLINE)
         elif self.curChar == '\0':
-            pass	# EOF token.
+            token = Token("EOF", TokenType.EOF)
+        elif self.curchar == ">":
+            if self.peak() == "=":
+                token = Token("GTEQ", TokenType.GTEQ)
+            else:
+                token = Token("GEQ", TokenType.GT)
+        elif self.curchar == ">":
+            if self.peak() == "=":
+                self.next_char()
+                token = Token("GTEQ", TokenType.GTEQ)
+            else:
+                token = Token("GEQ", TokenType.GT)
+        elif self.curchar == "<":
+            if self.peak() == "=":
+                self.next_char()
+                token = Token("LTEQ", TokenType.LTEQ)
+            else:
+                token = Token("LEQ", TokenType.LT)    
+        elif self.curchar == "!":
+            if self.peak() == "=":
+                self.next_char()
+                token = Token("NOTEQ", TokenType.NOTEQ)
+            else:
+                sys.exit(f"Unknown Token: !")
         else:
-            # Unknown token!
-            pass
+            sys.exit(f"Unknown Token:{self.cur_char}")
         self.nextChar()
+    
+    
         
 
     
