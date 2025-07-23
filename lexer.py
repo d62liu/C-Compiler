@@ -1,4 +1,3 @@
-
 import enum
 import sys
 
@@ -26,12 +25,15 @@ class lexer:
     def return_error(self):
         pass
     def skip_whitespace(self):
-        while self.source[self.cur_pos] == " " or self.source[self.cur_char] == "\n":
+        while self.cur_char == " " or self.cur_char == "\n" and self.peak() != "\0":
             self.next_char()
-        self.cur_char = self.source[self.cur_pos]
-    def skip_comments(self): #doesn't yet support multi line
-        while self.source[self.cur_pos] != "\n":
-            self.next_char()
+    def skip_comments(self): 
+        if self.cur_char == "#":
+            while self.source[self.cur_pos] != "\n":
+                self.next_char()
+        elif self.cur_char == "/*":
+            while self.source[self.cur_pos] != "*/":
+                self.next_char()
         self.cur_char = self.source[self.cur_pos]
     def get_token(self):
         self.skip_whitespace()
@@ -41,44 +43,62 @@ class lexer:
             token = Token("*", TokenType.ASTERISK)
         elif self.cur_char == "-":
             token = Token("-", TokenType.MINUS)
-        elif self.curChar == '+':
+        elif self.cur_char == '+':
             token = Token("+", TokenType.PLUS)
-        elif self.curChar == '/':
+        elif self.cur_char == '/':
             token = Token("/", TokenType.SLASH)
-        elif self.curChar == '\n':
+        elif self.cur_char == '\n':
             token = Token("nl", TokenType.NEWLINE)
-        elif self.curChar == '\0':
+        elif self.cur_char == '\0':
             token = Token("EOF", TokenType.EOF)
-        elif self.curchar == ">":
+        elif self.cur_char == ">":
             if self.peak() == "=":
                 token = Token("GTEQ", TokenType.GTEQ)
             else:
                 token = Token("GEQ", TokenType.GT)
-        elif self.curchar == ">":
+        elif self.cur_char == ">":
             if self.peak() == "=":
                 self.next_char()
                 token = Token("GTEQ", TokenType.GTEQ)
             else:
                 token = Token("GEQ", TokenType.GT)
-        elif self.curchar == "<":
+        elif self.cur_char == "<":
             if self.peak() == "=":
                 self.next_char()
                 token = Token("LTEQ", TokenType.LTEQ)
             else:
                 token = Token("LEQ", TokenType.LT)    
-        elif self.curchar == "!":
+        elif self.cur_char == "!":
             if self.peak() == "=":
                 self.next_char()
                 token = Token("NOTEQ", TokenType.NOTEQ)
             else:
                 sys.exit(f"Unknown Token: !")
+        elif self.cur_char.isdigit(): #does not support comma in between numbers
+            value = ""
+            has_decimal = False
+            while self.peak().isdigit() or self.peak() == ".":
+                if has_decimal == True and self.peak() == ".":
+                    sys.exit(f"Multiple Decimial Points Found")
+                value += self.cur_char
+                if self.peak() == ".":
+                    value += self.peak()
+                    if not(self.peak().isdigit):
+                        sys.exit("Illegal character in number")
+                    else:
+                        has_decimal = True
+                self.next_char()
+
+            token = Token(value, TokenType.NUMBER)
+        elif self.cur_char == "\\" and self.peak() == "0": #single back slash
+            token = Token("EOF", TokenType.EOF)
+            return 
+        
+                
+
         else:
             sys.exit(f"Unknown Token:{self.cur_char}")
-        self.nextChar()
-    
-    
-        
-
+        return token
     
 class TokenType(enum.Enum):
 	EOF = -1
