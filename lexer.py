@@ -92,7 +92,7 @@ class lexer:
             token = Token(value, TokenType.NUMBER)
         elif self.cur_char == "\\" and self.peak() == "0": #single back slash
             token = Token("EOF", TokenType.EOF)
-            return 
+            return token
         
                 
 
