@@ -46,7 +46,10 @@ class lexer:
         elif self.cur_char == '+':
             token = Token("+", TokenType.PLUS)
         elif self.cur_char == '/':
-            token = Token("/", TokenType.SLASH)
+            if self.peak == '0':
+                token = Token("EOF", TokenType.EOF)
+            else:
+                token = Token("/", TokenType.SLASH)
         elif self.cur_char == '\n':
             token = Token("nl", TokenType.NEWLINE)
         elif self.cur_char == '\0':
@@ -92,13 +95,14 @@ class lexer:
             token = Token(value, TokenType.NUMBER)
         elif self.cur_char == "\\" and self.peak() == "0": #single back slash
             token = Token("EOF", TokenType.EOF)
-            return token
-        
-                
-
         else:
             sys.exit(f"Unknown Token:{self.cur_char}")
+        if token.val != "EOF":   
+            self.next_char()
+        else:
+            sys.exit("EOF")
         return token
+    
     
 class TokenType(enum.Enum):
 	EOF = -1
