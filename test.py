@@ -1,7 +1,7 @@
 from lexer import *
 
 def main():
-    source = "+-\0"
+    source = "+-123 9.8654*\n\0" 
     Lexer = lexer(source)
     token = Lexer.get_token()
     while token.val != TokenType.EOF:

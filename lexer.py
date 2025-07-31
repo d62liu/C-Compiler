@@ -14,7 +14,7 @@ class lexer:
         self.next_char()
     def next_char(self):
         if self.cur_pos >= len(self.source):
-            self.cur_char = '\0'
+            sys.exit("EOF")
         else:
             self.cur_pos += 1
             self.cur_char = self.source[self.cur_pos]
@@ -95,6 +95,16 @@ class lexer:
             token = Token(value, TokenType.NUMBER)
         elif self.cur_char == "\\" and self.peak() == "0": #single back slash
             token = Token("EOF", TokenType.EOF)
+        elif self.cur_char.isalpha() or self.cur_char == '_':
+            word = ""
+            while self.peak().isalnum() or self.cur_char == '_':      
+                word += self.cur_char
+                self.next_char()
+            keyword = Token.checkIfKeyword(word)
+            if keyword == False:
+                token = Token(word, TokenType.IDENT)
+            else:
+                token = Token(word, TokenType, keyword)
         else:
             sys.exit(f"Unknown Token:{self.cur_char}")
         if token.val != "EOF":   
@@ -102,8 +112,12 @@ class lexer:
         else:
             sys.exit("EOF")
         return token
-    
-    
+    def checkIfKeyword(self, word):
+        for type in TokenType:
+            if word == type and 100 <= type and type <= 200:
+                return type
+        return False
+
 class TokenType(enum.Enum):
 	EOF = -1
 	NEWLINE = 0
