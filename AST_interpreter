@@ -1,0 +1,148 @@
+from parser import *
+from lexer import *
+
+class CInterpreter:
+    def __init__(self):
+        self.variables = {}
+        self.functions = {}
+        self.call_stack = []
+    
+    def interpret(self, program):
+        for decl in program.declarations:
+            if isinstance(decl, FunctionDeclaration):
+                self.functions[decl.name] = decl
+        
+        if 'main' in self.functions:
+            return self.call_function('main', [])
+        else:
+            raise RuntimeError("No main function found")
+    
+    def call_function(self, name, args):
+        if name not in self.functions:
+            raise RuntimeError(f"Function {name} not defined")
+        
+        func = self.functions[name]
+        
+        old_vars = self.variables.copy()
+        
+        for i, param in enumerate(func.parameters):
+            if i < len(args):
+                self.variables[param.name] = args[i]
+        
+        try:
+            result = self.execute_compound(func.body)
+        except ReturnValue as ret:
+            result = ret.value
+        
+        self.variables = old_vars
+        return result
+    
+    def execute_statement(self, stmt):
+        if isinstance(stmt, CompoundStatement):
+            return self.execute_compound(stmt)
+        elif isinstance(stmt, ExpressionStatement):
+            if stmt.expression:
+                return self.evaluate_expression(stmt.expression)
+        elif isinstance(stmt, IfStatement):
+            condition = self.evaluate_expression(stmt.condition)
+            if condition:
+                return self.execute_statement(stmt.then_stmt)
+            elif stmt.else_stmt:
+                return self.execute_statement(stmt.else_stmt)
+        elif isinstance(stmt, ReturnStatement):
+            value = 0
+            if stmt.expression:
+                value = self.evaluate_expression(stmt.expression)
+            raise ReturnValue(value)
+        elif isinstance(stmt, VariableDeclaration):
+            value = 0
+            if stmt.initializer:
+                value = self.evaluate_expression(stmt.initializer)
+            self.variables[stmt.name] = value
+        
+        return None
+    
+    def execute_compound(self, compound):
+        result = None
+        for stmt in compound.statements:
+            result = self.execute_statement(stmt)
+        return result
+    
+    def evaluate_expression(self, expr):
+        if isinstance(expr, Literal):
+            return expr.value
+        elif isinstance(expr, Identifier):
+            if expr.name in self.variables:
+                return self.variables[expr.name]
+            else:
+                raise RuntimeError(f"Variable {expr.name} not defined")
+        elif isinstance(expr, BinaryExpression):
+            left = self.evaluate_expression(expr.left)
+            right = self.evaluate_expression(expr.right)
+            
+            if expr.operator == '+':
+                return left + right
+            elif expr.operator == '-':
+                return left - right
+            elif expr.operator == '*':
+                return left * right
+            elif expr.operator == '/':
+                return left // right  # Integer division
+            elif expr.operator == '==':
+                return 1 if left == right else 0
+            elif expr.operator == '!=':
+                return 1 if left != right else 0
+            elif expr.operator == '<':
+                return 1 if left < right else 0
+            elif expr.operator == '<=':
+                return 1 if left <= right else 0
+            elif expr.operator == '>':
+                return 1 if left > right else 0
+            elif expr.operator == '>=':
+                return 1 if left >= right else 0
+        elif isinstance(expr, AssignmentExpression):
+            value = self.evaluate_expression(expr.right)
+            if isinstance(expr.left, Identifier):
+                self.variables[expr.left.name] = value
+                return value
+        elif isinstance(expr, FunctionCall):
+            func_name = expr.function.name
+            args = [self.evaluate_expression(arg) for arg in expr.arguments]
+            return self.call_function(func_name, args)
+        
+        raise RuntimeError(f"Unknown expression type: {type(expr)}")
+
+class ReturnValue(Exception):
+    def __init__(self, value):
+        self.value = value
+        
+        
+def main():
+    # Fibonacci in C
+    source_code = """
+    int fibonacci(int n) {
+        if (n <= 1) {
+            return n;
+        }
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+    
+    int main() {
+        int result = fibonacci(10);
+        return result;
+    }
+    """
+    
+    try:
+        lex = lexer(source_code)
+        parser = CParser(lex)
+        ast = parser.parse()        
+        interpreter = CInterpreter()
+        result = interpreter.interpret(ast)
+        print(f"{result}")
+        
+    except Exception as e:
+        print(f"{e}")
+
+if __name__ == "__main__":
+    main()
